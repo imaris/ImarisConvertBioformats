@@ -31,6 +31,7 @@ On MacOS and Linux
 
 1. java: tested succesfully with both java8 and java11 (we also need jre, or jre-like functionality from jdk)
 1. BioFormats: download _bioformats_package.jar_ from https://www.openmicroscopy.org/bio-formats/downloads/  and copy it to the existing empty _bioformats_ folder, contained in the _Imaris Convert Bioformats_ top folder.
+1. ImarisWriter: download and extract the source code from https://github.com/imaris/ImarisWriter. Rename the folder containing  _CMakeLists.txt_ as _ImarisWriter_ and copy it in the same folder as bioformats,  fileiobase,  fileiobioformats and  ImarisConvertBioformats. It will be automatically built during ImarisConvertBioformats' building process.
 
 ### Build
 
