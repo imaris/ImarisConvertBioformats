@@ -69,7 +69,8 @@ For most Java 11 installations, ```JRE_HOME``` could be set to ```$JAVA_HOME```
 
 The ```cmake``` command should be run from _ImarisConvertBioformats_ subfolder.
 
-####Building example on Windows
+#### Building example on Windows
+
 ```Release``` build using Visual Studio, with custom installation for all dependencies:
 ```bash
 cd ImarisConvertBioformats
@@ -83,7 +84,8 @@ devenv.com "ImarisConvertBioformats.sln" /Deploy "Release|x64" /project "INSTALL
 A ```debug``` build is similar, one just has to set _Debug_, instead of _Release_ in the build and install steps.
 The installation folder is ```build/<build_type>```.
 
-####Building example on Linux/MacOS
+#### Building example on Linux/MacOS
+
 ```Release``` build, with system path installations for all thirdparty dependencies (so ```<Library_Name>_ROOT``` not necessary):
 ```bash
 cd ImarisConvertBioformats
