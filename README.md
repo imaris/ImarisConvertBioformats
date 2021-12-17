@@ -6,6 +6,7 @@
 ### Usage
 
 ImarisConvertBioformats is an executable. To get the arguments list and usage examples:
+
 On Windows
 ```bash
 ImarisConvertBioformats.exe --help
