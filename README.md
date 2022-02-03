@@ -1,11 +1,16 @@
 # ImarisConvertBioformats
 
+ImarisConvertBioformats is a command line program that converts microscopy image files stored in one of the many file formats readable by the [*Bio-Formats*](https://www.openmicroscopy.org/bio-formats/) readers into the IMS format used by the [*Imaris*](https://imaris.oxinst.com/) software for visualization and analysis of microscopy images.    
+
+ImarisConvertBioformats uses [*ImarisWriter*](https://github.com/imaris/ImarisWriter) for high performance writing of files. It uses the Bio-Formats readers in a slice-by-slice way during conversion to achieve conversion with minimal memory overhead. 
+
+ImarisConvertBioformats is simple to use from the command line. It can also be used as a plugin to the ImarisFileConverter program which provides a graphical user interface that makes file conversion very simple.
 
 
 
 ### Usage
 
-ImarisConvertBioformats is an executable. To get the arguments list and usage examples:
+ImarisConvertBioformats is a command line program. To get the arguments list and usage examples:
 
 On Windows
 ```bash
@@ -18,6 +23,8 @@ On MacOS and Linux
 
 ### Dependencies
 
+1. BioFormats: download _bioformats_package.jar_ from https://www.openmicroscopy.org/bio-formats/downloads/  and copy it to the existing empty _bioformats_ folder, contained in the _Imaris Convert Bioformats_ top folder.
+1. ImarisWriter: download and extract the source code from https://github.com/imaris/ImarisWriter. Rename the folder containing  _CMakeLists.txt_ as _ImarisWriter_ and copy it in the same folder as bioformats,  fileiobase,  fileiobioformats and  ImarisConvertBioformats. It will be automatically built during ImarisConvertBioformats' building process.
 1. hdf5 version >= 1.10.4: https://www.hdfgroup.org/downloads/hdf5/ (compile with default options, only base C module is required)
 1. zlib: https://www.zlib.net/ (compile with default options)
 1. lz4: https://github.com/lz4/lz4 (compile with default options)
@@ -31,8 +38,6 @@ On MacOS and Linux
 	> link=static
 
 1. java: tested succesfully with both java8 and java11 (we also need jre, or jre-like functionality from jdk)
-1. BioFormats: download _bioformats_package.jar_ from https://www.openmicroscopy.org/bio-formats/downloads/  and copy it to the existing empty _bioformats_ folder, contained in the _Imaris Convert Bioformats_ top folder.
-1. ImarisWriter: download and extract the source code from https://github.com/imaris/ImarisWriter. Rename the folder containing  _CMakeLists.txt_ as _ImarisWriter_ and copy it in the same folder as bioformats,  fileiobase,  fileiobioformats and  ImarisConvertBioformats. It will be automatically built during ImarisConvertBioformats' building process.
 
 ### Build
 
