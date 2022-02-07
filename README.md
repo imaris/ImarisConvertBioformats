@@ -2,11 +2,9 @@
 
 ImarisConvertBioformats is a command line program that converts microscopy image files stored in one of the many file formats readable by the [*Bio-Formats*](https://www.openmicroscopy.org/bio-formats/) readers into the IMS format used by the [*Imaris*](https://imaris.oxinst.com/) software for visualization and analysis of microscopy images.    
 
-ImarisConvertBioformats uses [*ImarisWriter*](https://github.com/imaris/ImarisWriter) for high performance writing of files. It uses the Bio-Formats readers in a slice-by-slice way during conversion to achieve conversion with minimal memory overhead. 
-
 ImarisConvertBioformats is simple to use from the command line. It can also be used as a plugin to the ImarisFileConverter program which provides a graphical user interface that makes file conversion very simple.
 
-
+The open source nature of ImarisConvertBioformats and [*Bio-Formats*](https://www.openmicroscopy.org/bio-formats/) and [*ImarisWriter*](https://github.com/imaris/ImarisWriter) creates the possibility to easily add new formats for both input and output and it creates the possibility for anyone to easily fix bugs should that be necessary. We hope that this flexibility is beneficial for the microscopy community. 
 
 ### Usage
 
