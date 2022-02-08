@@ -37,7 +37,7 @@ private:
   void PrintOutputFormats() const;
   void PrintCmdLineHelp(const std::vector<bpSharedPtr<bpfFileReaderImplFactoryBase>>& aFileReaderFactories, const bpString& aProgramName) const;
   void PrintCmdLineUsage(const bpString& aProgramName) const;
-  void PrintCmdLineVersion() const;
+  void PrintCmdLineVersion(const std::vector<bpSharedPtr<bpfFileReaderImplFactoryBase>>& aFileReaderFactories) const;
   void PrintExitCodes() const;
 
   virtual void LogMessage(const bpString& aMessage) const;
@@ -46,7 +46,7 @@ private:
   void SetDefaultColors(const bpString& aColor0, const bpString& aColor1, const bpString& aColor2, const bpString& aColor3);
   bool IsAtomicArgument(bpSize aArgIndex, const std::vector<bpString>& aArguments);
 
-  bpString GetVersionFullStringRevision() const;
+  bpString GetVersionFullStringRevision(const std::vector<bpSharedPtr<bpfFileReaderImplFactoryBase>>& aFileReaderFactories) const;
   bpSharedPtr<bpFileReaderFactory> CreateFileReaderFactory(const std::vector<bpSharedPtr<bpfFileReaderImplFactoryBase>>& aFileReaderFactories) const;
 
   bpTimeout mTimeout;

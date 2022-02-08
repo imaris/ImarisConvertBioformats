@@ -19,7 +19,6 @@
 
 #include "bpfFileReaderBioformats.h"
 
-//#include "fileiobioformats/java/bpJavaHandle.h"
 #include <limits>
 #include "bpfTypesUtils.h"
 
@@ -57,16 +56,131 @@ bpfFileReaderBioformats::~bpfFileReaderBioformats()
   bpfJNISanityCheck();
 }
 
+void bpfFileReaderBioformats::HandleMetadataOptions(JNIEnv* aEnv)
+{
+  jclass vDynamicMetadataOptionsClass(aEnv->FindClass("loci/formats/in/DynamicMetadataOptions"));
+  bpfJNISanityCheck(vDynamicMetadataOptionsClass, "vDynamicMetadataOptionsClass");
+
+  jmethodID vDynamicMetadataOptionsConstructor = aEnv->GetMethodID(vDynamicMetadataOptionsClass, "<init>", "()V");
+  bpfJNISanityCheck(vDynamicMetadataOptionsConstructor, "vDynamicMetadataOptionsConstructor");
+  jobject vDynamicMetadataOptionsObject(aEnv->NewObject(vDynamicMetadataOptionsClass, vDynamicMetadataOptionsConstructor));
+  bpfJNISanityCheck(vDynamicMetadataOptionsObject, "vDynamicMetadataOptionsObject");
+  //mImageReaderObject = vEnv->NewGlobalRef(vImageReaderObject);
+
+  jclass vMetadataLevelClass(aEnv->FindClass("loci/formats/in/MetadataLevel"));
+  bpfJNISanityCheck(vMetadataLevelClass, "vMetadataLevelClass");
+
+  jfieldID vLevelField = aEnv->GetStaticFieldID(vMetadataLevelClass, "MINIMUM", "Lloci/formats/in/MetadataLevel;");
+  bpfJNISanityCheck(vLevelField, "vLevelField");
+  jobject vLevelObject = aEnv->GetStaticObjectField(vMetadataLevelClass, vLevelField);
+  bpfJNISanityCheck(vLevelObject, "vLevelObject");
+
+  jmethodID vSetMetadataLevel = aEnv->GetMethodID(vDynamicMetadataOptionsClass, "setMetadataLevel", "(Lloci/formats/in/MetadataLevel;)V");
+  bpfJNISanityCheck(vSetMetadataLevel, "vSetMetadataLevel");
+  aEnv->CallVoidMethod(vDynamicMetadataOptionsObject, vSetMetadataLevel, vLevelObject);
+  //bpfJNISanityCheck(vLevelField, "vLevelField");
+
+  /* jmethodID public void setMetadataLevel
+  public void setMetadataLevel(MetadataLevel level
+  */
+
+  jmethodID vSetMetadataOptions = aEnv->GetMethodID(mImageReaderClass, "setMetadataOptions", "(Lloci/formats/in/MetadataOptions;)V");
+  bpfJNISanityCheck(vSetMetadataOptions, "vSetMetadataOptions");
+  aEnv->CallVoidMethod(mImageReaderObject, vSetMetadataOptions, vDynamicMetadataOptionsObject);
+
+
+  //setOriginalMetadataPopulated(boolean populate) {
+  jmethodID vSetOriginalMetadataPopulated = aEnv->GetMethodID(mImageReaderClass, "setOriginalMetadataPopulated", "(Z)V");
+  bpfJNISanityCheck(vSetOriginalMetadataPopulated, "vSetOriginalMetadataPopulated");
+  aEnv->CallVoidMethod(mImageReaderObject, vSetOriginalMetadataPopulated, 0);
+  bpfJNISanityCheck();
+}
+
+void bpfFileReaderBioformats::TryOpenAsSeries(JNIEnv* aEnv)
+{
+  bpfJNISanityCheck();
+
+  jstring vFilename = aEnv->NewStringUTF(mFileName.c_str());
+
+  //loci.common.Location;
+  jclass vLocationClass(aEnv->FindClass("loci/common/Location"));
+  bpfJNISanityCheck(vLocationClass, "vLocationClass");
+  // create new instance of Location
+  jmethodID vLocationConstructor = aEnv->GetMethodID(vLocationClass, "<init>", "(Ljava/lang/String;)V");
+  bpfJNISanityCheck(vLocationConstructor, "vLocationConstructor");
+  jobject vLocationObject(aEnv->NewObject(vLocationClass, vLocationConstructor, vFilename));
+  bpfJNISanityCheck(vLocationObject, "vLocationObject");
+
+  //get filename pattern
+  jclass vFilePattern(aEnv->FindClass("loci/formats/FilePattern"));
+  bpfJNISanityCheck(vFilePattern, "vFilePattern");
+  jmethodID vFilePatternConstructor = aEnv->GetMethodID(vFilePattern, "<init>", "(Lloci/common/Location;)V");
+  bpfJNISanityCheck(vFilePatternConstructor, "vFilePatternConstructor");
+  jobject vFilePatternObject(aEnv->NewObject(vFilePattern, vFilePatternConstructor, vLocationObject));
+  bpfJNISanityCheck(vFilePatternObject, "vFilePatternObject");
+
+
+  jmethodID vGetPattern = aEnv->GetMethodID(vFilePattern, "getPattern", "()Ljava/lang/String;");
+  bpfJNISanityCheck(vGetPattern, "vGetPattern");
+  jstring vPattern = (jstring)aEnv->CallObjectMethod(vFilePatternObject, vGetPattern);
+  //bpfJNISanityCheck();
+  bpfString vStringPattern = "";
+  if ((void*)vPattern) {
+    vStringPattern = aEnv->GetStringUTFChars(vPattern, 0);
+  }
+
+  bpfSize vNumberFiles = 0;
+  if (!vStringPattern.empty()) {
+    jmethodID vGetFiles = aEnv->GetMethodID(vFilePattern, "getFiles", "()[Ljava/lang/String;");
+    bpfJNISanityCheck(vGetFiles, "vGetFiles");
+    jobjectArray vFiles((jobjectArray)aEnv->CallObjectMethod(vFilePatternObject, vGetFiles));
+    //bpfJNISanityCheck();
+    if (vFiles) {
+      vNumberFiles = aEnv->GetArrayLength(vFiles);
+    }
+  }
+
+
+  if (vNumberFiles > 1) {
+    
+    //loci.formats.FileStitcher
+    jclass vFileStitcherClass(aEnv->FindClass("loci/formats/FileStitcher"));
+    bpfJNISanityCheck(vFileStitcherClass, "vFileStitcherClass");
+    mImageReaderClass = (jclass)aEnv->NewGlobalRef(vFileStitcherClass);
+
+    // create new instance of FileStitcher
+    jmethodID vFileStitcherConstructor = aEnv->GetMethodID(vFileStitcherClass, "<init>", "(Lloci/formats/IFormatReader;Z)V");
+    bpfJNISanityCheck(vFileStitcherConstructor, "vFileStitcherConstructor");
+    jobject vFileStitcherObject(aEnv->NewObject(vFileStitcherClass, vFileStitcherConstructor, mImageReaderObject, JNI_TRUE));
+    bpfJNISanityCheck(vFileStitcherObject, "vFileStitcherObject");
+    mImageReaderObject = aEnv->NewGlobalRef(vFileStitcherObject);
+    jmethodID vSetId = aEnv->GetMethodID(mImageReaderClass, "setId", "(Ljava/lang/String;)V");
+    bpfJNISanityCheck(vSetId, "vSetId");
+    aEnv->CallVoidMethod(mImageReaderObject, vSetId, vPattern);
+    bpfJNISanityCheck();
+  }
+
+}
 
 void bpfFileReaderBioformats::InitializeFileReader()
 {
   auto vEnv = bpfJNI::GetEnv();
   bpfJNISanityCheck();
 
+  // use class loci.common.DebugTools
+  jclass vDebugTools(vEnv->FindClass("loci/common/DebugTools"));
+  bpfJNISanityCheck(vDebugTools, "vDebugTools");
+  //call DebugTools.setRootLevel("OFF"); to disable logging
+  jmethodID vSetRootLevelId = vEnv->GetStaticMethodID(vDebugTools, "setRootLevel", "(Ljava/lang/String;)V");
+  bpfJNISanityCheck(vSetRootLevelId, "setRootLevel");
+  jstring vLevel = vEnv->NewStringUTF("OFF");
+  vEnv->CallStaticVoidMethod(vDebugTools, vSetRootLevelId, vLevel);
+  bpfJNISanityCheck();
+
   // use class loci.formats.ImageReader
   jclass vImageReader(vEnv->FindClass("loci/formats/ImageReader"));
   bpfJNISanityCheck(vImageReader, "vImageReader");
-  mImageReaderClass = (jclass) vEnv->NewGlobalRef(vImageReader);
+  mImageReaderClass = (jclass)vEnv->NewGlobalRef(vImageReader);
 
   // create new instance of ImageReader
   jmethodID vImageReaderConstructor = vEnv->GetMethodID(mImageReaderClass, "<init>", "()V");
@@ -100,6 +214,7 @@ void bpfFileReaderBioformats::InitializeFileReader()
   vEnv->CallVoidMethod(mImageReaderObject, vSetMetadataStore, vMetadataObject);
   bpfJNISanityCheck();
 
+  //HandleMetadataOptions(vEnv);
 
   // set flattened resolution to false, such that resolution levels are not interpreted as datasets
   // call ImageReader.setFlattenedResolutions(boolean flattened), return void
@@ -108,12 +223,22 @@ void bpfFileReaderBioformats::InitializeFileReader()
   vEnv->CallVoidMethod(mImageReaderObject, vSetFlattenedResolutions, 0);
   bpfJNISanityCheck();
 
-  // call ImageReader.setId() to set image file name
+  jstring vFilename = vEnv->NewStringUTF(mFileName.c_str());
+
   jmethodID vSetId = vEnv->GetMethodID(mImageReaderClass, "setId", "(Ljava/lang/String;)V");
   bpfJNISanityCheck(vSetId, "vSetId");
-  jstring vFilename = vEnv->NewStringUTF(mFileName.c_str());
   vEnv->CallVoidMethod(mImageReaderObject, vSetId, vFilename);
-  bpfJNISanityCheck();  
+  bpfJNISanityCheck();
+
+  // call ImageReader.getSeriesCount(), returns int
+  jmethodID vGetSeriesCount = vEnv->GetMethodID(mImageReaderClass, "getSeriesCount", "()I");
+  bpfJNISanityCheck(vGetSeriesCount, "vGetSeriesCount");
+  bpfSize vNumberDataSets = static_cast<bpfSize>(vEnv->CallIntMethod(mImageReaderObject, vGetSeriesCount));
+  bpfJNISanityCheck();
+
+  if (vNumberDataSets == 1) {
+    TryOpenAsSeries(vEnv);
+  }  
 }
 
 
@@ -142,8 +267,7 @@ std::vector<bpfString> bpfFileReaderBioformats::GetAllFileNames() const
 std::vector<bpfString> bpfFileReaderBioformats::GetAllFileNamesOfDataSet(const bpfString& aFileName) const
 {
   try {
-    bpfFileReaderBioformats vInterface(aFileName);
-    return vInterface.GetAllFileNames();
+    return GetAllFileNames();
   }
   catch (...) {
     return {};
@@ -264,21 +388,10 @@ std::vector<bpfString> bpfFileReaderBioformats::GetReaderExtension() const
   auto vEnv = bpfJNI::GetEnv();
   LockImageReaderObject(vEnv);
 
-  // get specific reader for current file format
-  // call ImageReader.getReader()
-  jmethodID vGetReader = vEnv->GetMethodID(mImageReaderClass, "getReader", "()Lloci/formats/IFormatReader;");
-  bpfJNISanityCheck(vGetReader, "vGetReader");
-  jobject vSpecificReader(vEnv->CallObjectMethod(mImageReaderObject, vGetReader));
-  bpfJNISanityCheck(vSpecificReader, "vSpecificReader");
-
-  // use the IFormatReader class to get the methodId, because specific reader is of type IFormatReader
-  jclass vIFormatReader(vEnv->FindClass("loci/formats/IFormatReader"));
-  bpfJNISanityCheck(vIFormatReader, "vIFormatReader");
-
   // call ImageReader.getSuffixes()
-  jmethodID vGetSuffixes = vEnv->GetMethodID(vIFormatReader, "getSuffixes", "()[Ljava/lang/String;");
+  jmethodID vGetSuffixes = vEnv->GetMethodID(mImageReaderClass, "getSuffixes", "()[Ljava/lang/String;");
   bpfJNISanityCheck(vGetSuffixes, "vGetSuffixes");
-  jobjectArray vSuffixes((jobjectArray)vEnv->CallObjectMethod(vSpecificReader, vGetSuffixes));
+  jobjectArray vSuffixes((jobjectArray)vEnv->CallObjectMethod(mImageReaderObject, vGetSuffixes));
   bpfJNISanityCheck(vSuffixes, "vSuffixes");
 
   std::vector<bpfString> vExtensions;

@@ -154,6 +154,19 @@ inline bpString bpToString(const bpVector3Float& aValue)
 }
 
 
+template <typename T>
+bpString bpToString(const std::vector<T>& aVector, const bpString& aSeparator = " ")
+{
+  bpString vResult;
+  typename std::vector<T>::const_iterator vIterator = aVector.begin();
+  while (vIterator != aVector.end()) {
+    vResult += bpToString(*vIterator++);
+    if (vIterator != aVector.end()) vResult += aSeparator;
+  }
+  return vResult;
+}
+
+
 inline bpString bpTrim(const bpString& s, const bpString& aTrimCharacters = " \t\n\r")
 {
   bpSize start = s.find_first_not_of(aTrimCharacters);

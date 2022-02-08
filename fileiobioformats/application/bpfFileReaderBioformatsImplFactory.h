@@ -41,7 +41,7 @@ public:
   virtual bpfString GetFileFormat(const bpfString& aFileName) override;
   virtual void AddPluginsFormats(const bpfString& aPluginsPath) override;
 
-  static bpfString GetVersion();
+  virtual bpfString GetVersion() const override;
 
 private:
 
@@ -51,6 +51,8 @@ private:
 #endif
 
   bpfString GetDefaultJVMPath();
+  bpfString GetBioformatsVersion() const;
+  void GetSupportedBioformatsFormats(std::vector<bpfString>&  aFormats, std::vector<std::vector<bpfString>>& aExtensions) const;
 
   std::list<bpfString> mFormats;
   std::map<bpfString, bpfString> mDescriptions;

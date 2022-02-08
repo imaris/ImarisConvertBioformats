@@ -84,6 +84,8 @@ protected:
 
 private:
   void InitializeFileReader();
+  void TryOpenAsSeries(JNIEnv* aEnv);
+  void HandleMetadataOptions(JNIEnv* aEnv);
 
   bpfString ConvertString(jstring aString, JNIEnv* aEnv) const;
   std::vector<bpfString> ConvertArrayOfStrings(jobjectArray aArrayOfStrings, JNIEnv* aEnv) const;

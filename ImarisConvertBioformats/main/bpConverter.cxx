@@ -579,7 +579,6 @@ bool bpConverter::ConvertFile(bpSharedPtr<bpFileReader> aFileReader)
 }
 
 
-
 bpUInt64 bpConverter::GetValueFromHexString(const bpString& aValue) const
 {
   bpUInt64 vResult = 0;
@@ -879,6 +878,9 @@ bool bpConverter::CreateImageDescriptors(bpSharedPtr<bpFileReader> aFileReader)
 
     auto vXmlTree = bpImageDescriptorXmlTree::ToXml(vFileDescriptors);
 
+    auto vFileTag = vXmlTree->AddTag("File");
+    vFileTag->AddAttr("path", mInputFileName);
+
     // get the xml information
     bpString vXML = vXmlTree->ToXml();
 
@@ -887,9 +889,16 @@ bool bpConverter::CreateImageDescriptors(bpSharedPtr<bpFileReader> aFileReader)
     vOutput.Write(vXML);
 
     // finished
-    bpLogger::LogInfo("Finished writing voxelhash of " + mInputFileName);
+    bpLogger::LogInfo("Finished writing Image Descriptors of " + mInputFileName);
   }
   catch (std::exception& aException) {
+    auto vTree = std::make_shared<bpXmlTree>("<Images/>");
+    auto vFileTag = vTree->AddTag("File");
+    vFileTag->AddAttr("path", mInputFileName);
+    bpString vXML = vTree->ToXml();
+    vOutput.Write("<?xml version = \"1.0\" encoding = \"UTF-8\"?>\n");
+    vOutput.Write(vXML);
+
     bpLogger::LogError(bpString(aException.what()) + " on " + mInputFileName);
     vSuccess = false;
   }

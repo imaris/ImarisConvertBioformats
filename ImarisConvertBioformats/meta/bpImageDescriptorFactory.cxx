@@ -93,6 +93,22 @@ bpImageDescriptorFactory::tFilesDescriptors bpImageDescriptorFactory::CreateImag
     }
 
     vImageDescriptor.mIsNative = IsNative(vFileReader);
+    vImageDescriptor.mIsSeriesConfigurable = vFileReader->SeriesConfigurable();
+    vImageDescriptor.mIsSceneConfigurable = vFileReader->SceneConfigurable();
+
+    vImageDescriptor.mDimensionSequence = vFileReader->GetDimensionSequence();
+    vImageDescriptor.mDataSizeV = vFileReader->GetDataSizeV();
+    vImageDescriptor.mExtentMin = vFileReader->GetExtentMin();
+    vImageDescriptor.mExtentMax = vFileReader->GetExtentMax();
+    auto vConfig = aFileReader->GetConfig();
+    if (!vConfig) {
+      vConfig = std::make_shared<bpFileReaderConfiguration>();
+    }
+    vImageDescriptor.mForcedVoxelSize = vConfig->GetForcedVoxelSize();
+
+    // todo mg: right place to add this?
+    vImageDescriptor.mConverterInfo.mExecutable = "ImarisConvertBioFormats";
+    vImageDescriptor.mConverterInfo.mFileFormat = vFileReader->GetReaderDescription();
 
     vFilesToOpen.push_back(tFilenameDescriptor(vFilename, vImageDescriptor));
   }
@@ -102,6 +118,7 @@ bpImageDescriptorFactory::tFilesDescriptors bpImageDescriptorFactory::CreateImag
 
 bool bpImageDescriptorFactory::IsNative(const bpFileReader::tImplPtr& aFileReader)
 {
+  // todo mg: I guess bioformats does not have the same descriptions strings...
   if (aFileReader->GetReaderDescription() != "Bitplane: Imaris 5.5" && aFileReader->GetReaderDescription() != "Big Data Viewer") {
     return false;
   }

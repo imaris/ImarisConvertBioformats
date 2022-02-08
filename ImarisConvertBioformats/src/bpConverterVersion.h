@@ -22,8 +22,8 @@
 
 
 #define BP_COMPANY_NAME_STR    "Bitplane"
-#define BP_COPYRIGHT_STR       "Copyright (c) 2021"
-#define BP_COPYRIGHT_FULL_STR  "Copyright (c) 1993-2021, Bitplane AG"
+#define BP_COPYRIGHT_STR       "Copyright (c) 2022"
+#define BP_COPYRIGHT_FULL_STR  "Copyright (c) 1993-2022, Bitplane AG"
 
 #define BP_STRINGIFY(x) #x
 #define BP_TO_STRING(x) BP_STRINGIFY(x)
@@ -59,7 +59,7 @@
 // Version number
 //
 
-#define IMARISCONVERT_APPLICATION_NAME_STR  "Imaris Convert"
+#define IMARISCONVERT_APPLICATION_NAME_STR  "Imaris Convert Bioformats"
 //#define IMARISCONVERT_VERSION_MAJOR         10
 //#define IMARISCONVERT_VERSION_MINOR         0
 //#define IMARISCONVERT_VERSION_PATCH         0

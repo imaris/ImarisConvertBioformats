@@ -22,6 +22,18 @@
 #include "bpUtils.h"
 
 
+inline void bpFromString(const bpString& aString, std::vector<bpFileReaderImpl::Dimension>& aResult)
+{
+  aResult.clear();
+  auto vStringVector = bpSplit(aString, " ");
+  aResult.reserve(vStringVector.size());
+  for (const auto& vString : vStringVector) {
+    unsigned int vValue = bpFromString<unsigned int>(vString);
+    aResult.push_back(static_cast<bpFileReaderImpl::Dimension>(vValue));
+  }
+}
+
+
 bpXmlTree::tPtr bpImageDescriptorXmlTree::ToXml(const bpString& aImagePath, const bpImageDescriptor& aImageDescriptor, bool aMakeRelativePaths)
 {
   auto vTree = std::make_shared<bpXmlTree>("<Image/>");
@@ -31,6 +43,15 @@ bpXmlTree::tPtr bpImageDescriptorXmlTree::ToXml(const bpString& aImagePath, cons
   vTree->AddAttr("dataSetName", aImageDescriptor.mDatasetName);
   vTree->AddAttr("imageIndex", bpToString(aImageDescriptor.mImageIndex));
   vTree->AddAttr("isNative", bpToString(aImageDescriptor.mIsNative));
+  vTree->AddAttr("isSeriesConfigurable", bpToString(aImageDescriptor.mIsSeriesConfigurable));
+  vTree->AddAttr("isSceneConfigurable", bpToString(aImageDescriptor.mIsSceneConfigurable));
+  vTree->AddAttr("DimensionSequence", bpToString(aImageDescriptor.mDimensionSequence));
+  vTree->AddAttr("DataSizeV", bpToString(aImageDescriptor.mDataSizeV));
+  vTree->AddAttr("ExtentMin", bpToString(aImageDescriptor.mExtentMin));
+  vTree->AddAttr("ExtentMax", bpToString(aImageDescriptor.mExtentMax));
+  vTree->AddAttr("ForcedVoxelSize", bpToString(aImageDescriptor.mForcedVoxelSize));
+  vTree->AddAttr("fileconverter", bpToString(aImageDescriptor.mConverterInfo.mExecutable));
+  vTree->AddAttr("fileformat", bpToString(aImageDescriptor.mConverterInfo.mFileFormat));
 
   bpString vLayoutXml = bpFileReader::FileLayoutToXMLString(aImageDescriptor.mFileSeriesLayout);
   if (!vLayoutXml.empty()) {
@@ -70,6 +91,16 @@ bool bpImageDescriptorXmlTree::FromXml(const bpXmlTree::tPtr& aXml, bpString& aI
   aImageDescriptor = bpImageDescriptor(aXml->GetAttr("baseFileName"), aXml->GetAttr("dataSetName"));
   bpFromString(aXml->GetAttr("imageIndex"), aImageDescriptor.mImageIndex);
   bpFromString(aXml->GetAttr("isNative"), aImageDescriptor.mIsNative);
+  bpFromString(aXml->GetAttr("isSeriesConfigurable"), aImageDescriptor.mIsSeriesConfigurable);
+  bpFromString(aXml->GetAttr("isSceneConfigurable"), aImageDescriptor.mIsSceneConfigurable);
+  bpFromString(aXml->GetAttr("DimensionSequence"), aImageDescriptor.mDimensionSequence);
+  bpFromString(aXml->GetAttr("DataSizeV"), aImageDescriptor.mDataSizeV, " ");
+  bpFromString(aXml->GetAttr("ExtentMin"), aImageDescriptor.mExtentMin);
+  bpFromString(aXml->GetAttr("ExtentMax"), aImageDescriptor.mExtentMax);
+  bpFromString(aXml->GetAttr("ForcedVoxelSize"), aImageDescriptor.mForcedVoxelSize);
+
+  bpFromString(aXml->GetAttr("fileconverter"), aImageDescriptor.mConverterInfo.mExecutable);
+  bpFromString(aXml->GetAttr("fileformat"), aImageDescriptor.mConverterInfo.mFileFormat);
   aImageDescriptor.mFileSeriesLayout = bpFileReader::FileLayoutFromXMLString(aXml->GetTag("FileSeriesLayout")->ToXml());
   if (aXml->GetTag("FilesDependencies")) {
     std::vector<bpXmlTree::tPtr> vDependencies = aXml->GetTag("FilesDependencies")->GetAllTags();

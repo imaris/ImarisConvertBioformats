@@ -30,7 +30,7 @@ target_link_libraries(${tgt} ${JNI_LIBRARIES} fileiobase ${Boost_LIBRARIES})
 add_custom_command(TARGET bpfileiobioformats
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${JAR_DIR}
-        ${CMAKE_BINARY_DIR}/$<CONFIGURATION>/fileiobioformats)
+        ${CMAKE_BINARY_DIR}/$<CONFIGURATION>/bioformats)
 
 if(CMAKE_SYSTEM_NAME MATCHES Windows)	        	
 

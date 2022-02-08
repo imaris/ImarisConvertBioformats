@@ -166,5 +166,5 @@ private:
   bpFileSeriesDelimiters mFileSeriesDelimiters;
 };
 
-#endif // __BP_CONVERTER__
 
+#endif

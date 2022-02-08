@@ -121,7 +121,6 @@ public:
 
 #if defined(_WIN32)
     std::string jvmDLLPath = *aJVM + "\\jvm.dll";
-    std::cout << "Loading JVM library from " << jvmDLLPath << std::endl;
     HINSTANCE vJvmDll = LoadLibrary(jvmDLLPath.c_str());
 
     if (vJvmDll == nullptr) {
@@ -130,9 +129,7 @@ public:
     typedef jint(JNICALL *CreateJavaVM)(JavaVM **, void **, void *);
     CreateJavaVM vCreateJavaVM = (CreateJavaVM)GetProcAddress(vJvmDll, "JNI_CreateJavaVM");
 
-    std::cout << "Starting VM..." << std::endl;
     jint rc = vCreateJavaVM(&mJvm, (void**)&mEnv, &vInitArgs);
-    std::cout << "VM started" << std::endl;
 #else
     jint rc = JNI_CreateJavaVM(&mJvm, (void**)&mEnv, &vInitArgs);
 #endif

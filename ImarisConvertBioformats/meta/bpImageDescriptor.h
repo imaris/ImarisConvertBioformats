@@ -27,6 +27,15 @@
 
 #define BPIMAGEINDEXINDICATOR "#"
 
+
+class bpConverterInfo
+{
+public:
+  bpString mFileFormat;
+  bpString mExecutable;
+};
+
+
 class bpImageDescriptor
 {
 public:
@@ -41,14 +50,16 @@ public:
    */
   explicit bpImageDescriptor(const bpString& aFilename)
     : mDatasetName(aFilename),
-      mBaseFileName(aFilename)
+      mBaseFileName(aFilename),
+      mConverterInfo()
   {
   }
 
   bpImageDescriptor(const bpString& aFilename, const bpString& aImageName, const tFileNames& aDependencies = tFileNames())
     : mImageDependencies(aDependencies),
       mDatasetName(aImageName),
-      mBaseFileName(aFilename)
+      mBaseFileName(aFilename),
+      mConverterInfo()
   {
   }
 
@@ -101,6 +112,16 @@ public:
   tFileNames mImageDependencies;
   std::map<bpString, bpFileReaderImpl::bpImageIndex> mFileSeriesLayout;
   bool mIsNative = false;
+  bpConverterInfo mConverterInfo;
+
+  // needed for the file converter in order to speed up adding files...
+  bool mIsSeriesConfigurable = false;
+  bool mIsSceneConfigurable = false;
+  std::vector<bpFileReaderImpl::Dimension> mDimensionSequence;
+  std::vector<bpSize> mDataSizeV;
+  bpVector3Float mExtentMin;
+  bpVector3Float mExtentMax;
+  bpVector3Float mForcedVoxelSize;
 };
 
 

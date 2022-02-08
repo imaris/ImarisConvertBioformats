@@ -39,6 +39,17 @@ int main(int argc, char* argv[])
   std::vector<bpString> vArguments(argv, argv + argc);
 #endif
 
+  // just ignore arguments for the crash reporter
+  auto vIt = std::find(vArguments.begin(), vArguments.end(), "--crash-reporter-handler-pipe");
+  if (vIt != vArguments.end()) {
+    auto vIt2 = vIt + 1;
+    bpSize vIndex = 1;
+    if (vIt2 != vArguments.end()) {
+      vIndex = 2;
+    }
+    vArguments.erase(vIt, vIt + vIndex);
+  }
+
   return Init(vFileReaderImplFactories, vArguments);
 }
 

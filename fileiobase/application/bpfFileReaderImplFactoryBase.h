@@ -39,6 +39,7 @@ public:
   virtual std::vector<bpfString> GetFormatExtensions(const bpfString& aFormat) const = 0;
   virtual bpfString GetFileFormat(const bpfString& aFileName) = 0;
   virtual void AddPluginsFormats(const bpfString& aPluginsPath) = 0;
+  virtual bpfString GetVersion() const = 0;
 };
 
 

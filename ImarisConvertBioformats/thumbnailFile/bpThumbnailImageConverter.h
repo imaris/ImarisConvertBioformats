@@ -20,7 +20,7 @@
 #ifndef __BP_THUMBNAIL_IMAGE_CONVERTER__
 #define __BP_THUMBNAIL_IMAGE_CONVERTER__
 
-#include "src/bpWriterCommonHeaders.h"
+#include "ImarisConvertBioformats/src/bpWriterCommonHeaders.h"
 #include "ImarisWriter/interface/bpImageConverterInterface.h"
 #include  ICMultiresolutionImsImage_h
 

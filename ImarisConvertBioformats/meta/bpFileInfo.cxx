@@ -31,19 +31,6 @@
 
 
 template <typename T>
-bpString bpToString(const std::vector<T>& aVector, const bpString& aSeparator = " ")
-{
-  bpString vResult;
-  typename std::vector<T>::const_iterator vIterator = aVector.begin();
-  while (vIterator != aVector.end()) {
-    vResult += bpToString(*vIterator++);
-    if (vIterator != aVector.end()) vResult += aSeparator;
-  }
-  return vResult;
-}
-
-
-template <typename T>
 bpString bpToSectionString(const std::vector<T>& aVector, const bpString& aSectionName)
 {
   bpString vResult;
@@ -85,6 +72,7 @@ bool bpFileInfo::ReadMetaData(
     aXML += aIndent + bpXML::WriteOneLineTag("BaseCropLimitsMax", bpToString(vConfig->GetCropLimitsMax())) + "\n";
     aXML += aIndent + bpXML::WriteOneLineTag("BaseCropLimitsMin", bpToString(vConfig->GetCropLimitsMin())) + "\n";
     aXML += aIndent + bpXML::WriteOneLineTag("BaseDefaultColorHint", bpToString(vConfig->GetDefaultColors(), ";")) + "\n";
+    aXML += aIndent + bpXML::WriteOneLineTag("BaseFileConverter", "ImarisConvertBioFormats") + "\n";
     aXML += aIndent + bpXML::WriteOneLineTag("BaseDescription", aFileReader->GetDescription()) + "\n";
     aXML += aIndent + bpXML::WriteOneLineTag("BaseDimension", bpToString(GetDimension(aFileName, aFileReader))) + "\n";
 
@@ -153,6 +141,8 @@ bool bpFileInfo::ReadMetaDataForArena(
   try {
 
     // dump the meta-data from base reader
+    // todo mg: right place to add this?
+    aXML += aIndent + bpXML::WriteOneLineTag("BaseFileConverter", "ImarisConvertBioFormats") + "\n";
     aXML += aIndent + bpXML::WriteOneLineTag("BaseDescription", aFileReader->GetDescription()) + "\n";
     aXML += aIndent + bpXML::WriteOneLineTag("BaseDimension", bpToString(GetDimension(aFileName, aFileReader))) + "\n";
 
@@ -173,7 +163,7 @@ bool bpFileInfo::ReadMetaDataForArena(
     // dump the meta-data from reader impl
     auto vReaderImpl = aFileReader->GetReaderImpl();
     if (vReaderImpl) {
-      aXML += aIndent + bpXML::WriteOneLineTag("ImpSeriesConfigurable", bpToString(vReaderImpl->SeriesConfigurable())) + "\n";
+      aXML += aIndent + bpXML::WriteOneLineTag("ImplSeriesConfigurable", bpToString(vReaderImpl->SeriesConfigurable())) + "\n";
       aXML += aIndent + bpXML::WriteOneLineTag("ImplActiveDataSetIndex", bpToString(vReaderImpl->GetActiveDataSetIndex())) + "\n";
       aXML += aIndent + bpXML::WriteOneLineTag("ImplActiveResolutionLevel", bpToString(vReaderImpl->GetActiveResolutionLevel())) + "\n";
       aXML += aIndent + bpXML::WriteOneLineTag("ImplDataBlockNumberOfVoxels", bpToString(vReaderImpl->GetDataBlockNumberOfVoxels())) + "\n";

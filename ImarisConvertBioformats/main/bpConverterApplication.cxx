@@ -31,9 +31,7 @@
 
 #include "fileiobase/types/bpfSmartPtr.h"
 
-
 #include <hdf5.h>
-
 #include <iostream>
 
 
@@ -82,12 +80,10 @@ void bpConverterApplication::SetDefaultColors(const bpString& aColor0, const bpS
 }
 
 
-bpString bpConverterApplication::GetVersionFullStringRevision() const
+bpString bpConverterApplication::GetVersionFullStringRevision(const std::vector<bpSharedPtr<bpfFileReaderImplFactoryBase>>& aFileReaderFactories) const
 {
-  return bpString(IMARISCONVERT_APPLICATION_NAME_STR) + " " +
-    bpToString(IMARISCONVERT_VERSION_MAJOR) + "." +
-    bpToString(IMARISCONVERT_VERSION_MINOR) + "." +
-    bpToString(IMARISCONVERT_VERSION_PATCH) +
+  const bpSharedPtr<bpFileReaderFactory>& vFactory = CreateFileReaderFactory(aFileReaderFactories);
+  return vFactory->GetFactoryImpl()->GetVersion() + " " +
     IMARISCONVERT_VERSION_BUILD_STR +
     " [" + __DATE__ + "]" +
     " Build " + BP_REVISION_NUMBER_STR +
@@ -95,9 +91,9 @@ bpString bpConverterApplication::GetVersionFullStringRevision() const
 }
 
 
-void bpConverterApplication::PrintCmdLineVersion() const
+void bpConverterApplication::PrintCmdLineVersion(const std::vector<bpSharedPtr<bpfFileReaderImplFactoryBase>>& aFileReaderFactories) const
 {
-  std::cout << GetVersionFullStringRevision() << std::endl;
+  std::cout << GetVersionFullStringRevision(aFileReaderFactories) << std::endl;
 }
 
 
@@ -174,9 +170,9 @@ void bpConverterApplication::PrintCmdLineUsage(const bpString& aProgramName) con
 {
   std::cout << "Examples:" << std::endl;
   std::cout << std::endl;
-  std::cout << "> " << aProgramName << " -if lif -i \"Leica_serie2.lif\" -ii 1 -o \"Leica_serie2_conv_1.ims\"" << std::endl;
+  std::cout << "> " << aProgramName << " -i \"Leica_serie2.lif\" -ii 1 -o \"Leica_serie2_conv_1.ims\"" << std::endl;
   std::cout << std::endl;
-  std::cout << "Reads \"Leica_serie2.lif\" as \"lif\" file. The input format argument, -if is optional." << std::endl;
+  std::cout << "Reads \"Leica_serie2.lif\" as \"lif\" file." << std::endl;
   std::cout << "If \"Leica_serie2.lif\" contains more than one image the option \"-ii\" specifies the" << std::endl;
   std::cout << "index of the source image (index counting starts with 0)." << std::endl;
   std::cout << std::endl;
@@ -207,9 +203,9 @@ void bpConverterApplication::PrintCmdLineHelp(const std::vector<bpSharedPtr<bpfF
 
   std::cout << std::endl;
 
-  PrintCmdLineVersion();
+  PrintCmdLineVersion(aFileReaderFactories);
 
-  std::cout << "Usage: " << vProgramName << " -if Imaris3 -i \"retina.ims\" -of OmeXml -o \"retina.ome\"" << std::endl;
+  std::cout << "Usage: " << vProgramName << " -i \"retina.ome\" -o \"retina.ims\" " << std::endl;
   std::cout << std::endl;
   std::cout << "  Argument Name:                   Argument Description:             Argument Value:" << std::endl;
   std::cout << "  -h   |--help                     This help screen                  -" << std::endl;
@@ -244,6 +240,7 @@ void bpConverterApplication::PrintCmdLineHelp(const std::vector<bpSharedPtr<bpfF
   std::cout << "  -l   |--log                      Log into file                     (default: to stdout - filename|\"none\")" << std::endl;
   std::cout << "  -lp  |--logprogress              Log R/W progress to stdout        (default: do not log progress)" << std::endl;
   std::cout << "  -nt  |--nthreads                 Set number of compression threads (default: 8)" << std::endl;
+  std::cout << "  -f   |--formats                  Get supported file formats        -" << std::endl;
   std::cout << "  -c   |--compression              Compression level                 (default: 2)" << std::endl;
   std::cout << "  -frp |--filereaderplugins        File Reader Plugins Path          (default: empty - no plugins)" << std::endl;
   std::cout << "  -dcl |--defaultcolorlist         Default color list                (4 #RRGGBB colors that apply to first, second, third and other channels)" << std::endl;
@@ -271,7 +268,7 @@ bpSharedPtr<bpFileReaderFactory> bpConverterApplication::CreateFileReaderFactory
     vFileReaderFactory->AddFactoryImpl(vFileReaderImplFactory);
 }
 
- 
+
   return vFileReaderFactory;
 }
 
@@ -300,7 +297,7 @@ int bpConverterApplication::Execute(const std::vector<bpSharedPtr<bpfFileReaderI
       exit(IMARIS_CONVERT_EXIT_SUCCESS);
     }
     else if (vArgName == "-v" || vArgName == "-version" || vArgName == "--version") {
-      PrintCmdLineVersion();
+      PrintCmdLineVersion(aFileReaderFactories);
       exit(IMARIS_CONVERT_EXIT_SUCCESS);
     }
     else if (vArgName == "-f" || vArgName == "-formats" || vArgName == "--formats") {
