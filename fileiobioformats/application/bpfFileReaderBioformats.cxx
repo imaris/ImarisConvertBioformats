@@ -388,10 +388,21 @@ std::vector<bpfString> bpfFileReaderBioformats::GetReaderExtension() const
   auto vEnv = bpfJNI::GetEnv();
   LockImageReaderObject(vEnv);
 
+  // get specific reader for current file format
+  // call ImageReader.getReader()
+  jmethodID vGetReader = vEnv->GetMethodID(mImageReaderClass, "getReader", "()Lloci/formats/IFormatReader;");
+  bpfJNISanityCheck(vGetReader, "vGetReader");
+  jobject vSpecificReader(vEnv->CallObjectMethod(mImageReaderObject, vGetReader));
+  bpfJNISanityCheck(vSpecificReader, "vSpecificReader");
+
+  // use the IFormatReader class to get the methodId, because specific reader is of type IFormatReader
+  jclass vIFormatReader(vEnv->FindClass("loci/formats/IFormatReader"));
+  bpfJNISanityCheck(vIFormatReader, "vIFormatReader");
+
   // call ImageReader.getSuffixes()
-  jmethodID vGetSuffixes = vEnv->GetMethodID(mImageReaderClass, "getSuffixes", "()[Ljava/lang/String;");
+  jmethodID vGetSuffixes = vEnv->GetMethodID(vIFormatReader, "getSuffixes", "()[Ljava/lang/String;");
   bpfJNISanityCheck(vGetSuffixes, "vGetSuffixes");
-  jobjectArray vSuffixes((jobjectArray)vEnv->CallObjectMethod(mImageReaderObject, vGetSuffixes));
+  jobjectArray vSuffixes((jobjectArray)vEnv->CallObjectMethod(vSpecificReader, vGetSuffixes));
   bpfJNISanityCheck(vSuffixes, "vSuffixes");
 
   std::vector<bpfString> vExtensions;
