@@ -6,6 +6,11 @@ ImarisConvertBioformats is simple to use from the command line. It can also be u
 
 The open source nature of ImarisConvertBioformats and [*Bio-Formats*](https://www.openmicroscopy.org/bio-formats/) and [*ImarisWriter*](https://github.com/imaris/ImarisWriter) creates the possibility to easily add new formats for both input and output and it creates the possibility for anyone to easily fix bugs should that be necessary. We hope that this flexibility is beneficial for the microscopy community. 
 
+### Binary Download
+You can download the latest installers for ImarisConvertBioformats for Windows and macOS here: 
+[*Windows Installer*](https://viewer.imaris.com/download/ImarisConvertBioformats_Latest.exe)
+[*macOS Installer*](https://viewer.imaris.com/download/ImarisConvertBioformats_Latest.dmg)
+
 ### Usage
 
 ImarisConvertBioformats is a command line program. To get the arguments list and usage examples:
