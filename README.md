@@ -8,8 +8,8 @@ The open source nature of ImarisConvertBioformats and [*Bio-Formats*](https://ww
 
 ### Binary Download
 You can download the latest installers for ImarisConvertBioformats for Windows and macOS here: 
-[*Windows Installer*](https://viewer.imaris.com/download/ImarisConvertBioformats_Latest.exe)
-[*macOS Installer*](https://viewer.imaris.com/download/ImarisConvertBioformats_Latest.dmg)
+[*WindowsInstaller*](https://viewer.imaris.com/download/ImarisConvertBioformats_Latest.exe), 
+[*macOSInstaller*](https://viewer.imaris.com/download/ImarisConvertBioformats_Latest.dmg)
 
 ### Usage
 
