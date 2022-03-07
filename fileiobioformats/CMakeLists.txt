@@ -27,10 +27,17 @@ target_compile_definitions(${tgt} PUBLIC COMPILE_SHARED_LIBRARY)
 target_link_libraries(${tgt} ${JNI_LIBRARIES} fileiobase ${Boost_LIBRARIES})
 
 
-add_custom_command(TARGET bpfileiobioformats
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${JAR_DIR}
-        ${CMAKE_BINARY_DIR}/$<CONFIGURATION>/bioformats)
+if(CMAKE_SYSTEM_NAME MATCHES Darwin)
+	add_custom_command(TARGET bpfileiobioformats
+		COMMAND ${CMAKE_COMMAND} -E copy_directory
+			${JAR_DIR}
+			${CMAKE_BINARY_DIR}/Frameworks/bioformats)
+else()
+	add_custom_command(TARGET bpfileiobioformats
+		COMMAND ${CMAKE_COMMAND} -E copy_directory
+			${JAR_DIR}
+			${CMAKE_BINARY_DIR}/${BUILD_TYPE}/bioformats)
+endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES Windows)	        	
 

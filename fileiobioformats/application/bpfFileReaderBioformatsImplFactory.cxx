@@ -48,12 +48,9 @@ std::vector<bpfString> ConvertArrayOfStrings(jobjectArray aArrayOfStrings, JNIEn
 
   for (size_t i = 0; i < vArrayLength; i++) {
     jstring vJavaString = (jstring)(aEnv->GetObjectArrayElement(aArrayOfStrings, i));
-    bpfJNISanityCheck(vJavaString, "vJavaString");
-    const char *vChars = aEnv->GetStringUTFChars(vJavaString, 0);
-    bpfJNISanityCheck();
-    bpfString vString = vChars;
+    bpfString vString = ConvertString(vJavaString, aEnv);
     vStringVector.push_back(vString);
-    aEnv->ReleaseStringUTFChars(vJavaString, vChars);
+    aEnv->DeleteLocalRef(vJavaString);
     bpfJNISanityCheck();
   }
 
@@ -70,6 +67,8 @@ bpfFileReaderBioformatsImplFactory::bpfFileReaderBioformatsImplFactory()
   std::string vJarPath = "";
 #if defined(_WIN32)
   vJarPath = "bioformats\\bioformats_package.jar";
+#elif defined(__APPLE__)
+  vJarPath = "../Frameworks/bioformats/bioformats_package.jar";
 #else
   vJarPath = "bioformats/bioformats_package.jar";
 #endif
@@ -78,19 +77,6 @@ bpfFileReaderBioformatsImplFactory::bpfFileReaderBioformatsImplFactory()
   size_t vMemoryLimitMB = 8000;
   size_t vMemoryLimitJava = (vMemoryLimitMB * 1024 * 1024) * 0.8;
   bpfJNI::Init(vJVMFolder, vJars, vMemoryLimitJava);
-
-  bpfString vVersion = GetBioformatsVersion();
-  bpfFileReaderImpl::SetOriginalFormatFileIOVersion("ImarisFileIOBioFormats " + vVersion);
-
-  std::vector<bpfString> vFormats;
-  std::vector<std::vector<bpfString>> vExtensions;
-  GetSupportedBioformatsFormats(vFormats, vExtensions);
-  for (bpfSize vIndex = 0; vIndex < vFormats.size(); ++vIndex) {
-    const auto& vFormat = vFormats[vIndex];
-    mFormats.push_back(vFormat);
-    mDescriptions[vFormat] = "";
-    mExtensions[vFormat] = vExtensions[vIndex];
-  }
 }
 
 
@@ -111,13 +97,16 @@ bpfString bpfFileReaderBioformatsImplFactory::GetBioformatsVersion() const
   jstring vVersionNumber((jstring)vEnv->GetStaticObjectField(vFormatTools, vGetVersionNumber));
   bpfJNISanityCheck();
   bpfString vVersion = ConvertString(vVersionNumber, vEnv);
+  vEnv->DeleteLocalRef(vVersionNumber);
+  bpfJNISanityCheck();
+  vEnv->DeleteLocalRef(vFormatTools);
+  bpfJNISanityCheck();
   return vVersion;
 }
 
 
 void bpfFileReaderBioformatsImplFactory::GetSupportedBioformatsFormats(std::vector<bpfString>&  aFormatDescriptions, std::vector<std::vector<bpfString>>& aExtensions ) const
 {
-  // get version number of the bioformats.jar file used here
   auto vEnv = bpfJNI::GetEnv();
   bpfJNISanityCheck();
   //MessageBox(0, "Attach ME!", "", 0);
@@ -129,6 +118,10 @@ void bpfFileReaderBioformatsImplFactory::GetSupportedBioformatsFormats(std::vect
   bpfJNISanityCheck(vSetRootLevelId, "setRootLevel");
   jstring vLevel = vEnv->NewStringUTF("OFF");
   vEnv->CallStaticVoidMethod(vDebugTools, vSetRootLevelId, vLevel);
+  bpfJNISanityCheck();
+  vEnv->DeleteLocalRef(vDebugTools);
+  bpfJNISanityCheck();
+  vEnv->DeleteLocalRef(vLevel);
   bpfJNISanityCheck();
 
   // first read out all readers => array of IFormatReader
@@ -147,6 +140,10 @@ void bpfFileReaderBioformatsImplFactory::GetSupportedBioformatsFormats(std::vect
   bpfJNISanityCheck(vGetReaders, "vGetReaders");
   jobjectArray vReaders ((jobjectArray)vEnv->CallObjectMethod(vImageReaderObject, vGetReaders));
   bpfJNISanityCheck(vReaders, "vReaders");
+  vEnv->DeleteLocalRef(vImageReader);
+  bpfJNISanityCheck();
+  vEnv->DeleteLocalRef(vImageReaderObject);
+  bpfJNISanityCheck();
 
   //// use the IFormatReader class to get the methodId, because specific reader is of type IFormatReader
   jclass vIFormatReader(vEnv->FindClass("loci/formats/IFormatReader"));
@@ -155,7 +152,7 @@ void bpfFileReaderBioformatsImplFactory::GetSupportedBioformatsFormats(std::vect
   bpfJNISanityCheck(vGetSuffixes, "vGetSuffixes");
   jmethodID vGetFormat = vEnv->GetMethodID(vIFormatReader, "getFormat", "()Ljava/lang/String;");
   bpfJNISanityCheck(vGetFormat, "vGetFormat");
-
+  
   
   std::map<bpfString, std::vector<bpfString>> vFormatsExtensionsMap;
   // iterate over all readers and get description and file extension
@@ -173,12 +170,46 @@ void bpfFileReaderBioformatsImplFactory::GetSupportedBioformatsFormats(std::vect
     aExtensions[vIndex] = ConvertArrayOfStrings(vSuffixes, vEnv);
     jstring vFormat((jstring)vEnv->CallObjectMethod(vReader, vGetFormat));
     bpfJNISanityCheck(vFormat, "vFormat");
-    aFormatDescriptions[vIndex] = vEnv->GetStringUTFChars(vFormat, 0);
+    aFormatDescriptions[vIndex] = ConvertString(vFormat, vEnv);
+    vEnv->DeleteLocalRef(vReader);
+    bpfJNISanityCheck();
+    vEnv->DeleteLocalRef(vSuffixes);
+    bpfJNISanityCheck();
+    vEnv->DeleteLocalRef(vFormat);
+    bpfJNISanityCheck();
 
   }
 
+  vEnv->DeleteLocalRef(vIFormatReader);
+  bpfJNISanityCheck();
+  vEnv->DeleteLocalRef(vReaders);
+  bpfJNISanityCheck();
+
 }
 
+void bpfFileReaderBioformatsImplFactory::SetFileReaderImplVersion()
+{
+  if (mVersion.empty()) {
+    mVersion = GetBioformatsVersion();
+    bpfFileReaderImpl::SetOriginalFormatFileIOVersion("ImarisFileIOBioFormats " + mVersion);
+  }
+}
+
+void  bpfFileReaderBioformatsImplFactory::SetSupportedBioformatsFormats()
+{
+  if (!mFormats.empty()) {
+    return;
+  }
+  std::vector<bpfString> vFormats;
+  std::vector<std::vector<bpfString>> vExtensions;
+  GetSupportedBioformatsFormats(vFormats, vExtensions);
+  for (bpfSize vIndex = 0; vIndex < vFormats.size(); ++vIndex) {
+    const auto& vFormat = vFormats[vIndex];
+    mFormats.push_back(vFormat);
+    mDescriptions[vFormat] = "";
+    mExtensions[vFormat] = vExtensions[vIndex];
+  }
+}
 
 bpfString bpfFileReaderBioformatsImplFactory::GetFormatDescription(const bpfString& aFormat) const
 {
@@ -235,6 +266,9 @@ bpfFileReaderImpl* CreateReaderImpl(const bpfString& aFileName, const bpfString&
 
 bpfFileReaderImplInterface* bpfFileReaderBioformatsImplFactory::CreateFileReader(const bpfString& aFileName, const bpfString& aFormatName)
 {
+  
+  SetFileReaderImplVersion();
+
   bpfFileReaderImpl* vReaderImpl = CreateReaderImpl(aFileName, aFormatName);
   return new bpfFileReaderImplToImplInterface(vReaderImpl);
 }
@@ -242,6 +276,7 @@ bpfFileReaderImplInterface* bpfFileReaderBioformatsImplFactory::CreateFileReader
 
 bpfFileReaderBioformatsImplFactory::Iterator bpfFileReaderBioformatsImplFactory::FormatBegin()
 {
+  SetSupportedBioformatsFormats();
   return mFormats.begin();
 }
 

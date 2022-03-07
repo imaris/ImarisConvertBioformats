@@ -39,7 +39,7 @@ std::vector<bpfString> bpfSplit(const bpfString& aString, const bpfString& aSepa
 bpfString bpfJoin(const std::vector<bpfString>& aStrings, const bpfString& aDelimitor);
 bpfString bpfReplace(const bpfString& aString, const bpfString& aSubStringOld, const bpfString& aSubStringNew);
 bool bpfStartsWith(const bpfString& aString, const bpfString& aPrefix);
-bool bpfEndsWith(const bpfString& aString, const bpfString& aPrefix);
+bool bpfEndsWith(const bpfString& aString, const bpfString& aPostfix);
 
 bpfString bpfToUpper(const bpfString& aString);
 bpfString bpfToLower(const bpfString& aString);

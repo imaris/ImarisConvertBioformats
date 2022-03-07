@@ -66,7 +66,7 @@ bpSharedPtr<bpThumbnail> bpThumbnailReader::ReadThumbnailFromFile(const bpString
 
 bpSharedPtr<bpThumbnail> bpThumbnailReader::ReadThumbnailFromData(const bpString& aBinaryData)
 {
-  FIMEMORY* vMemory = FreeImage_OpenMemory((BYTE*)aBinaryData.data(), aBinaryData.size());
+  FIMEMORY* vMemory = FreeImage_OpenMemory(reinterpret_cast<BYTE*>(const_cast<char*>(aBinaryData.data())), aBinaryData.size());
 
   FREE_IMAGE_FORMAT vFormat = FreeImage_GetFileTypeFromMemory(vMemory);
   if (vFormat == FIF_UNKNOWN) {

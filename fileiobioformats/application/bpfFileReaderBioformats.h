@@ -84,7 +84,7 @@ protected:
 
 private:
   void InitializeFileReader();
-  void TryOpenAsSeries(JNIEnv* aEnv);
+  void TryOpenAsSeries();
   void HandleMetadataOptions(JNIEnv* aEnv);
 
   bpfString ConvertString(jstring aString, JNIEnv* aEnv) const;

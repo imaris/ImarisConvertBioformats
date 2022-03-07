@@ -89,6 +89,11 @@ if(CMAKE_SYSTEM_NAME MATCHES Windows)
 	set(BUILD_TYPE $<CONFIGURATION>)
 else()
 	set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
+	if (CMAKE_BUILD_TYPE)
+		add_custom_target(build-time-make-directory ALL
+			COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_TYPE})
+	endif()
+
 endif()
 
 
@@ -115,10 +120,10 @@ find_library(FreeImage_LIBRARIES
                  NAMES FreeImage
                  PATHS ${FreeImage_ROOT}/lib
                  NO_DEFAULT_PATH)
-				 
+
 get_filename_component(FreeImage_LIBRARY_DIRS ${FreeImage_LIBRARIES} DIRECTORY)
 find_path(FreeImage_INCLUDE_DIR NAMES FreeImage.h
-        PATHS ${FreeImage_ROOT}/include)				 
+        PATHS ${FreeImage_ROOT}/include)
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FreeImage DEFAULT_MSG FreeImage_INCLUDE_DIR FreeImage_LIBRARIES)
 message("Found FreeImage." + ${FreeImage_INCLUDE_DIR} + "  " + ${FreeImage_LIBRARIES})
@@ -134,13 +139,6 @@ target_link_libraries(${tgt} PRIVATE bpfileiobioformats fileiobase  bpImarisWrit
 get_filename_component(ZLIB_DIR ${ZLIB_INCLUDE_DIR} DIRECTORY)
 
 if(CMAKE_SYSTEM_NAME MATCHES Windows)
-	set(BUILD_TYPE $<CONFIGURATION>)
-else()
-	set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
-endif()
-
-		
-if(CMAKE_SYSTEM_NAME MATCHES Windows)
 	add_custom_command(TARGET ImarisConvertBioformats POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_directory
 			${HDF5_ROOT}/bin
@@ -149,12 +147,12 @@ if(CMAKE_SYSTEM_NAME MATCHES Windows)
 	add_custom_command(TARGET ImarisConvertBioformats POST_BUILD
 			COMMAND ${CMAKE_COMMAND} -E copy_directory
 				${FreeImage_ROOT}/bin
-				${CMAKE_BINARY_DIR}/${BUILD_TYPE})		
+				${CMAKE_BINARY_DIR}/${BUILD_TYPE})
 
 	add_custom_command(TARGET ImarisConvertBioformats POST_BUILD
 			COMMAND ${CMAKE_COMMAND} -E copy_directory
 				${ZLIB_DIR}/bin
-				${CMAKE_BINARY_DIR}/${BUILD_TYPE})				
+				${CMAKE_BINARY_DIR}/${BUILD_TYPE})
 else()
 	if (CMAKE_BUILD_TYPE)
 		install (TARGETS ImarisConvertBioformats

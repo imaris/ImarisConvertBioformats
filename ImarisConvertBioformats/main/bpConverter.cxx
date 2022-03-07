@@ -607,7 +607,7 @@ bpString bpConverter::ReadXMLLayoutFromFile() const
 
   // read file
 #ifdef BP_UTF8_FILENAMES
-  std::ifstream vInputFile(bpFileTools::FromUtf8Path(vInputSeriesLayoutFileName));
+  std::ifstream vInputFile(bpFileTools::FromUtf8Path(vInputSeriesLayoutFileName), std::ifstream::binary);
 #else
   std::ifstream vInputFile(vInputSeriesLayoutFileName.c_str());
 #endif

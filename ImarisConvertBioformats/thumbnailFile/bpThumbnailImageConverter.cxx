@@ -266,15 +266,6 @@ void bpThumbnailImageConverter<TDataType>::CopyFileBlockToImage(const tSize5D& a
   bpSize vEndY;
   GetFullRangeOfFileBlock(vFileBlockIndices[vDimY], mDimensionSequence[vDimY], vBeginY, vEndY);
 
-  bpVec2 vBegin = {
-    mIsFlipped[0] ? mImageSize[X] - vEndX : vBeginX,
-    mIsFlipped[1] ? mImageSize[Y] - vEndY : vBeginY
-  };
-  bpVec2 vEnd = {
-    mIsFlipped[0] ? mImageSize[X] - vBeginX : vEndX,
-    mIsFlipped[1] ? mImageSize[Y] - vBeginY : vEndY
-  };
-
   bpSize vDimWeightX = vDimWeight[vDimX];
   bpSize vDimWeightY = vDimWeight[vDimY];
   bpSize vStepX = vMemSample[0] * vDimWeightX;

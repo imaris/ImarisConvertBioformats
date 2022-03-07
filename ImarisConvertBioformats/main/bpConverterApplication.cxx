@@ -211,7 +211,7 @@ void bpConverterApplication::PrintCmdLineHelp(const std::vector<bpSharedPtr<bpfF
   std::cout << "  -h   |--help                     This help screen                  -" << std::endl;
   std::cout << "  -v   |--version                  Print Version                     -" << std::endl;
   std::cout << "  -i   |--input                    Input File Name                   (required: filename)" << std::endl;
-  std::cout << "  -li  |--inputlist                Input File Contains List of Files (default: no)" << std::endl;
+  std::cout << "  -mi  |--inputlist                Input File Contains List of Files (default: no)" << std::endl;
   std::cout << "  -if  |--inputformat              Input File Format                 (default: autodetect)" << std::endl;
   std::cout << "  -ii  |--inputindex               Input File Image Index            (files with multiple images, default: 0)" << std::endl;
   std::cout << "  -ic  |--inputcrop                Crop Input File Image             (default: do not crop - MinX,MaxX,MinY,MaxY,MinZ,MaxZ,MinC,MaxC,MinT,MaxT" << std::endl;
@@ -242,6 +242,7 @@ void bpConverterApplication::PrintCmdLineHelp(const std::vector<bpSharedPtr<bpfF
   std::cout << "  -nt  |--nthreads                 Set number of compression threads (default: 8)" << std::endl;
   std::cout << "  -f   |--formats                  Get supported file formats        -" << std::endl;
   std::cout << "  -c   |--compression              Compression level                 (default: 2)" << std::endl;
+  std::cout << "  -ch  |--colorhint                Color hint                        (default: ColorLUTHint - ColorLUTHint|ColorEmissionHint|ColorDefaultHint)" << std::endl;
   std::cout << "  -frp |--filereaderplugins        File Reader Plugins Path          (default: empty - no plugins)" << std::endl;
   std::cout << "  -dcl |--defaultcolorlist         Default color list                (4 #RRGGBB colors that apply to first, second, third and other channels)" << std::endl;
   std::cout << "  -fsdx|--fileseriesdelimitersx    File series delimiters X          (X delimiters to apply to configurable file formats, colon separated)" << std::endl;
@@ -461,6 +462,9 @@ int bpConverterApplication::Execute(const std::vector<bpSharedPtr<bpfFileReaderI
     }
     else if (vArgName == "-c" || vArgName == "-compression" || vArgName == "--compression") {
       vConverter.SetCompressionAlgorithmType(static_cast<bpConverterTypes::tCompressionAlgorithmType>(bpFromString<bpSize>(vArgValue)));
+    }
+    else if (vArgName == "-ch" || vArgName == "-colorhint" || vArgName == "--colorhint") {
+      SetColorHint(vArgValue);
     }
     else if (vArgName == "-frp" || vArgName == "-filereaderplugins" || vArgName == "--filereaderplugins") {
       vFileReaderFactory->SetPluginsPath(vArgValue);

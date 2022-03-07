@@ -50,6 +50,15 @@ int main(int argc, char* argv[])
     vArguments.erase(vIt, vIt + vIndex);
   }
 
+#if defined(_WIN32)
+  // Note mg: having our own signal handler does colide with the one needed by jvm
+  // on Linux based systems and results in random crashes. As ImarisConvertBioformats
+  // is based on the java app bioformats_package.jar, we are adding our own signal
+  // handler only for Windows.
+  // See https://docs.oracle.com/javase/7/docs/webnotes/tsg/TSG-VM/html/signals.html
+  bpHandleAllSignals(bpHandleSignal);
+#endif
+
   return Init(vFileReaderImplFactories, vArguments);
 }
 

@@ -65,11 +65,6 @@ void bpHandleAllSignals(void(*aSignalHandler)(int))
 
 int Init(const std::vector<bpSharedPtr<bpfFileReaderImplFactoryBase>>& aFileReaderFactories, const std::vector<bpString>& aArguments)
 {
-
-  // hook signalsand messages
-
-  bpHandleAllSignals(bpHandleSignal);
-
 #if defined(_WIN32)
   SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
   _putenv("TZ=");

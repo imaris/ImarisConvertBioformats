@@ -19,6 +19,7 @@
 
 #include "bpfFileReaderBioformats.h"
 
+//#include "fileiobioformats/java/bpJavaHandle.h"
 #include <limits>
 #include "bpfTypesUtils.h"
 
@@ -96,70 +97,85 @@ void bpfFileReaderBioformats::HandleMetadataOptions(JNIEnv* aEnv)
   bpfJNISanityCheck();
 }
 
-void bpfFileReaderBioformats::TryOpenAsSeries(JNIEnv* aEnv)
+void bpfFileReaderBioformats::TryOpenAsSeries()
 {
+  auto vEnv = bpfJNI::GetEnv();
   bpfJNISanityCheck();
 
-  jstring vFilename = aEnv->NewStringUTF(mFileName.c_str());
+  jstring vFilename = vEnv->NewStringUTF(mFileName.c_str());
+  bpfJNISanityCheck(vFilename, "vFilename");
 
   //loci.common.Location;
-  jclass vLocationClass(aEnv->FindClass("loci/common/Location"));
+  jclass vLocationClass(vEnv->FindClass("loci/common/Location"));
   bpfJNISanityCheck(vLocationClass, "vLocationClass");
   // create new instance of Location
-  jmethodID vLocationConstructor = aEnv->GetMethodID(vLocationClass, "<init>", "(Ljava/lang/String;)V");
+  jmethodID vLocationConstructor = vEnv->GetMethodID(vLocationClass, "<init>", "(Ljava/lang/String;)V");
   bpfJNISanityCheck(vLocationConstructor, "vLocationConstructor");
-  jobject vLocationObject(aEnv->NewObject(vLocationClass, vLocationConstructor, vFilename));
+  jobject vLocationObject(vEnv->NewObject(vLocationClass, vLocationConstructor, vFilename));
   bpfJNISanityCheck(vLocationObject, "vLocationObject");
+  vEnv->DeleteLocalRef(vLocationClass);
+  bpfJNISanityCheck();
 
   //get filename pattern
-  jclass vFilePattern(aEnv->FindClass("loci/formats/FilePattern"));
+  jclass vFilePattern(vEnv->FindClass("loci/formats/FilePattern"));
   bpfJNISanityCheck(vFilePattern, "vFilePattern");
-  jmethodID vFilePatternConstructor = aEnv->GetMethodID(vFilePattern, "<init>", "(Lloci/common/Location;)V");
+  jmethodID vFilePatternConstructor = vEnv->GetMethodID(vFilePattern, "<init>", "(Lloci/common/Location;)V");
   bpfJNISanityCheck(vFilePatternConstructor, "vFilePatternConstructor");
-  jobject vFilePatternObject(aEnv->NewObject(vFilePattern, vFilePatternConstructor, vLocationObject));
+  jobject vFilePatternObject(vEnv->NewObject(vFilePattern, vFilePatternConstructor, vLocationObject));
   bpfJNISanityCheck(vFilePatternObject, "vFilePatternObject");
+  vEnv->DeleteLocalRef(vLocationObject);
+  bpfJNISanityCheck();
 
-
-  jmethodID vGetPattern = aEnv->GetMethodID(vFilePattern, "getPattern", "()Ljava/lang/String;");
+  jmethodID vGetPattern = vEnv->GetMethodID(vFilePattern, "getPattern", "()Ljava/lang/String;");
   bpfJNISanityCheck(vGetPattern, "vGetPattern");
-  jstring vPattern = (jstring)aEnv->CallObjectMethod(vFilePatternObject, vGetPattern);
-  //bpfJNISanityCheck();
+  jstring vPattern = (jstring)vEnv->CallObjectMethod(vFilePatternObject, vGetPattern);
+  bpfJNISanityCheck();
   bpfString vStringPattern = "";
   if ((void*)vPattern) {
-    vStringPattern = aEnv->GetStringUTFChars(vPattern, 0);
+    vStringPattern = ConvertString(vPattern, vEnv);
   }
 
   bpfSize vNumberFiles = 0;
   if (!vStringPattern.empty()) {
-    jmethodID vGetFiles = aEnv->GetMethodID(vFilePattern, "getFiles", "()[Ljava/lang/String;");
+    jmethodID vGetFiles = vEnv->GetMethodID(vFilePattern, "getFiles", "()[Ljava/lang/String;");
     bpfJNISanityCheck(vGetFiles, "vGetFiles");
-    jobjectArray vFiles((jobjectArray)aEnv->CallObjectMethod(vFilePatternObject, vGetFiles));
-    //bpfJNISanityCheck();
+    jobjectArray vFiles((jobjectArray)vEnv->CallObjectMethod(vFilePatternObject, vGetFiles));
+    bpfJNISanityCheck();
     if (vFiles) {
-      vNumberFiles = aEnv->GetArrayLength(vFiles);
+      vNumberFiles = vEnv->GetArrayLength(vFiles);
     }
-  }
-
-
-  if (vNumberFiles > 1) {
-    
-    //loci.formats.FileStitcher
-    jclass vFileStitcherClass(aEnv->FindClass("loci/formats/FileStitcher"));
-    bpfJNISanityCheck(vFileStitcherClass, "vFileStitcherClass");
-    mImageReaderClass = (jclass)aEnv->NewGlobalRef(vFileStitcherClass);
-
-    // create new instance of FileStitcher
-    jmethodID vFileStitcherConstructor = aEnv->GetMethodID(vFileStitcherClass, "<init>", "(Lloci/formats/IFormatReader;Z)V");
-    bpfJNISanityCheck(vFileStitcherConstructor, "vFileStitcherConstructor");
-    jobject vFileStitcherObject(aEnv->NewObject(vFileStitcherClass, vFileStitcherConstructor, mImageReaderObject, JNI_TRUE));
-    bpfJNISanityCheck(vFileStitcherObject, "vFileStitcherObject");
-    mImageReaderObject = aEnv->NewGlobalRef(vFileStitcherObject);
-    jmethodID vSetId = aEnv->GetMethodID(mImageReaderClass, "setId", "(Ljava/lang/String;)V");
-    bpfJNISanityCheck(vSetId, "vSetId");
-    aEnv->CallVoidMethod(mImageReaderObject, vSetId, vPattern);
+    vEnv->DeleteLocalRef(vFiles);
     bpfJNISanityCheck();
   }
 
+    vEnv->DeleteLocalRef(vFilePattern);
+    bpfJNISanityCheck();
+    vEnv->DeleteLocalRef(vFilePatternObject);
+    bpfJNISanityCheck();
+
+  if (vNumberFiles > 1) {
+    //loci.formats.FileStitcher
+    jclass vFileStitcherClass(vEnv->FindClass("loci/formats/FileStitcher"));
+    bpfJNISanityCheck(vFileStitcherClass, "vFileStitcherClass");
+    vEnv->DeleteGlobalRef(mImageReaderClass);
+    bpfJNISanityCheck();
+    mImageReaderClass = (jclass)vEnv->NewGlobalRef(vFileStitcherClass);
+
+    // create new instance of ImageReader
+    jmethodID vFileStitcherConstructor = vEnv->GetMethodID(vFileStitcherClass, "<init>", "(Lloci/formats/IFormatReader;Z)V");
+    bpfJNISanityCheck(vFileStitcherConstructor, "vFileStitcherConstructor");
+    jobject vFileStitcherObject(vEnv->NewObject(vFileStitcherClass, vFileStitcherConstructor, mImageReaderObject, JNI_TRUE));
+    bpfJNISanityCheck(vFileStitcherObject, "vFileStitcherObject");
+    vEnv->DeleteGlobalRef(mImageReaderObject);
+    bpfJNISanityCheck();
+    mImageReaderObject = vEnv->NewGlobalRef(vFileStitcherObject);
+    jmethodID vSetId = vEnv->GetMethodID(mImageReaderClass, "setId", "(Ljava/lang/String;)V");
+    bpfJNISanityCheck(vSetId, "vSetId");
+    vEnv->CallVoidMethod(mImageReaderObject, vSetId, vPattern);
+    bpfJNISanityCheck();
+    vEnv->DeleteLocalRef(vFileStitcherObject);
+    bpfJNISanityCheck();
+  }
 }
 
 void bpfFileReaderBioformats::InitializeFileReader()
@@ -176,11 +192,17 @@ void bpfFileReaderBioformats::InitializeFileReader()
   jstring vLevel = vEnv->NewStringUTF("OFF");
   vEnv->CallStaticVoidMethod(vDebugTools, vSetRootLevelId, vLevel);
   bpfJNISanityCheck();
+  vEnv->DeleteLocalRef(vLevel);
+  bpfJNISanityCheck();
+  vEnv->DeleteLocalRef(vDebugTools);
+  bpfJNISanityCheck();
 
   // use class loci.formats.ImageReader
   jclass vImageReader(vEnv->FindClass("loci/formats/ImageReader"));
   bpfJNISanityCheck(vImageReader, "vImageReader");
   mImageReaderClass = (jclass)vEnv->NewGlobalRef(vImageReader);
+  vEnv->DeleteLocalRef(vImageReader);
+  bpfJNISanityCheck();
 
   // create new instance of ImageReader
   jmethodID vImageReaderConstructor = vEnv->GetMethodID(mImageReaderClass, "<init>", "()V");
@@ -188,7 +210,8 @@ void bpfFileReaderBioformats::InitializeFileReader()
   jobject vImageReaderObject(vEnv->NewObject(mImageReaderClass, vImageReaderConstructor));
   bpfJNISanityCheck(vImageReaderObject, "vImageReaderObject");
   mImageReaderObject = vEnv->NewGlobalRef(vImageReaderObject);
-
+  vEnv->DeleteLocalRef(vImageReaderObject);
+  bpfJNISanityCheck();
 
   // Set metadata store
 
@@ -202,16 +225,22 @@ void bpfFileReaderBioformats::InitializeFileReader()
   jobject vMetadataObject(vEnv->CallStaticObjectMethod(vMetadataTools, vCreateOMEXMLMetadata));
   bpfJNISanityCheck(vMetadataObject, "vMetadataObject");
   mMetadataObject = vEnv->NewGlobalRef(vMetadataObject);
+  vEnv->DeleteLocalRef(vMetadataObject);
+  bpfJNISanityCheck();
+  vEnv->DeleteLocalRef(vMetadataTools);
+  bpfJNISanityCheck();
 
   // use class ome.xml.meta.IMetadata
   jclass vIMetadataClassOME(vEnv->FindClass("ome/xml/meta/IMetadata"));
   bpfJNISanityCheck(vIMetadataClassOME, "vIMetadataClassOME");
   mMetadataClass = (jclass)vEnv->NewGlobalRef(vIMetadataClassOME);
+  vEnv->DeleteLocalRef(vIMetadataClassOME);
+  bpfJNISanityCheck();
 
   // call ImageReader.setMetadataStore(MetadataStore store), returns void, loci.formats.meta.MetadataStore
   jmethodID vSetMetadataStore = vEnv->GetMethodID(mImageReaderClass, "setMetadataStore", "(Lloci/formats/meta/MetadataStore;)V");
   bpfJNISanityCheck(vSetMetadataStore, "vSetMetadataStore");
-  vEnv->CallVoidMethod(mImageReaderObject, vSetMetadataStore, vMetadataObject);
+  vEnv->CallVoidMethod(mImageReaderObject, vSetMetadataStore, mMetadataObject);
   bpfJNISanityCheck();
 
   //HandleMetadataOptions(vEnv);
@@ -224,10 +253,14 @@ void bpfFileReaderBioformats::InitializeFileReader()
   bpfJNISanityCheck();
 
   jstring vFilename = vEnv->NewStringUTF(mFileName.c_str());
+  bpfJNISanityCheck(vFilename, "vFilename");
 
   jmethodID vSetId = vEnv->GetMethodID(mImageReaderClass, "setId", "(Ljava/lang/String;)V");
   bpfJNISanityCheck(vSetId, "vSetId");
+  //jstring vFilename = vEnv->NewStringUTF(mFileName.c_str());
   vEnv->CallVoidMethod(mImageReaderObject, vSetId, vFilename);
+  bpfJNISanityCheck();
+  vEnv->DeleteLocalRef(vFilename);
   bpfJNISanityCheck();
 
   // call ImageReader.getSeriesCount(), returns int
@@ -237,7 +270,7 @@ void bpfFileReaderBioformats::InitializeFileReader()
   bpfJNISanityCheck();
 
   if (vNumberDataSets == 1) {
-    TryOpenAsSeries(vEnv);
+    TryOpenAsSeries();
   }  
 }
 
@@ -258,6 +291,8 @@ std::vector<bpfString> bpfFileReaderBioformats::GetAllFileNames() const
 
   std::vector<bpfString> vFileNames;
   vFileNames = ConvertArrayOfStrings(vUsedFiles, vEnv);
+  vEnv->DeleteLocalRef(vUsedFiles);
+  bpfJNISanityCheck();
 
   UnlockImageReaderObject(vEnv);
   return vFileNames;
@@ -377,6 +412,8 @@ bpfString bpfFileReaderBioformats::GetReaderDescription() const
   bpfJNISanityCheck(vFormat, "vFormat");
 
   bpfString vFormatString = ConvertString(vFormat, vEnv);
+  vEnv->DeleteLocalRef(vFormat);
+  bpfJNISanityCheck();
 
   UnlockImageReaderObject(vEnv);
   return vFormatString;
@@ -408,6 +445,13 @@ std::vector<bpfString> bpfFileReaderBioformats::GetReaderExtension() const
   std::vector<bpfString> vExtensions;
   vExtensions = ConvertArrayOfStrings(vSuffixes, vEnv);
 
+  vEnv->DeleteLocalRef(vSuffixes);
+  bpfJNISanityCheck();
+  vEnv->DeleteLocalRef(vIFormatReader);
+  bpfJNISanityCheck();
+  vEnv->DeleteLocalRef(vSpecificReader);
+  bpfJNISanityCheck();
+
   UnlockImageReaderObject(vEnv);
   return vExtensions;
 }
@@ -438,6 +482,9 @@ std::vector<bpfFileReaderBioformats::Dimension> bpfFileReaderBioformats::GetDime
   bpfJNISanityCheck(vDimensionOrder, "vDimensionOrder");
 
   bpfString vDimensions = ConvertString(vDimensionOrder, vEnv);
+  vEnv->DeleteLocalRef(vDimensionOrder);
+  bpfJNISanityCheck();
+
   bool vIsInterleaved = IsInterleaved(vEnv);
 
   std::vector<Dimension> vDimensionVector;
@@ -565,6 +612,8 @@ void bpfFileReaderBioformats::ReadDataBlock(void* aDataBlockMemory)
   bpfJNISanityCheck(vGetBytesPerPixel, "vGetBytesPerPixel");
   jint vJBytesPerPixel(vEnv->CallStaticIntMethod(vFormatTools, vGetBytesPerPixel, vPixelType));
   bpfJNISanityCheck();
+  vEnv->DeleteLocalRef(vFormatTools);
+  bpfJNISanityCheck();
   bpfSize vBytesPerPixel = static_cast<bpfSize>(vJBytesPerPixel);
 
   
@@ -581,7 +630,8 @@ void bpfFileReaderBioformats::ReadDataBlock(void* aDataBlockMemory)
   vEnv->GetByteArrayRegion(vJBlockBytes, 0, vBufferSize, (jbyte*) aDataBlockMemory);
   bpfJNISanityCheck();
 
-
+  vEnv->DeleteLocalRef(vJBlockBytes);
+  bpfJNISanityCheck();
   // check big endian
   // call ImageReader.isLittleEndian(), return bool
   jmethodID vIsLittleEndian = vEnv->GetMethodID(mImageReaderClass, "isLittleEndian", "()Z");
@@ -771,6 +821,8 @@ bool bpfFileReaderBioformats::ReadThumbnail(std::vector<bpfPackedRGBA>& aThumbna
     jsize vChannelOffset = vChannelBlockIndex * vBlockBufferSizeJ;
     vEnv->GetByteArrayRegion(vJThumbBytes, 0, vBlockBufferSizeJ, (jbyte*)vBufferPointer + vChannelOffset);
     bpfJNISanityCheck();
+    vEnv->DeleteLocalRef(vJThumbBytes);
+    bpfJNISanityCheck();
   }
 
   // map bytes to colors
@@ -898,7 +950,8 @@ bpfSectionContainer bpfFileReaderBioformats::ReadParametersImpl()
   bpfString vImageName = ConvertString(vJImageName, vEnv);
   bpfParameterSection* vImageSection = vSectionContainer.CreateSection("Image");
   vImageSection->SetParameter("Name", vImageName);
-
+  vEnv->DeleteLocalRef(vJImageName);
+  bpfJNISanityCheck();
 
   // add channel parameters for colors
 
@@ -916,6 +969,8 @@ bpfSectionContainer bpfFileReaderBioformats::ReadParametersImpl()
       bpfFloat vPinholeSize = GetFloatFromLength(vJPinholeSize, vEnv);
       channelSection->SetParameter("LSMPinhole", bpfToString(vPinholeSize));
     }
+    vEnv->DeleteLocalRef(vJPinholeSize);
+    bpfJNISanityCheck();
 
     // call getChannelEmissionWavelength(int imageIndex, int channelIndex), returns Length
     jmethodID vGetChannelEmissionWavelength = vEnv->GetMethodID(mMetadataClass, "getChannelEmissionWavelength", "(II)Lome/units/quantity/Length;");
@@ -925,7 +980,9 @@ bpfSectionContainer bpfFileReaderBioformats::ReadParametersImpl()
     if (vJEmissionWavelength) {
       bpfFloat vEmissionWavelength = GetFloatFromLength(vJEmissionWavelength, vEnv);
       channelSection->SetParameter("LSMEmissionWavelength", bpfToString(vEmissionWavelength));
-    }    
+    }
+    vEnv->DeleteLocalRef(vJEmissionWavelength);
+    bpfJNISanityCheck();
 
     // call Length	getChannelExcitationWavelength(int imageIndex, int channelIndex)
     jmethodID vGetChannelExcitationWavelength = vEnv->GetMethodID(mMetadataClass, "getChannelExcitationWavelength", "(II)Lome/units/quantity/Length;");
@@ -936,6 +993,8 @@ bpfSectionContainer bpfFileReaderBioformats::ReadParametersImpl()
       bpfFloat vExcitationWavelength = GetFloatFromLength(vJExcitationWavelength, vEnv);
       channelSection->SetParameter("LSMExcitationWavelength", bpfToString(vExcitationWavelength));
     }
+    vEnv->DeleteLocalRef(vJExcitationWavelength);
+    bpfJNISanityCheck();
   }
 
   UnlockImageReaderObject(vEnv);
@@ -968,12 +1027,9 @@ std::vector<bpfString> bpfFileReaderBioformats::ConvertArrayOfStrings(jobjectArr
 
   for (size_t i = 0; i < vArrayLength; i++) {
     jstring vJavaString = (jstring)(aEnv->GetObjectArrayElement(aArrayOfStrings, i));
-    bpfJNISanityCheck(vJavaString, "vJavaString");
-    const char *vChars = aEnv->GetStringUTFChars(vJavaString, 0);
-    bpfJNISanityCheck();
-    bpfString vString = vChars;
+    bpfString vString = ConvertString(vJavaString, aEnv);
     vStringVector.push_back(vString);
-    aEnv->ReleaseStringUTFChars(vJavaString, vChars);
+    aEnv->DeleteLocalRef(vJavaString);
     bpfJNISanityCheck();
   }
 
@@ -1004,6 +1060,13 @@ bpfFloat bpfFileReaderBioformats::GetFloatFromLength(jobject aLength, JNIEnv* aE
   bpfJNISanityCheck();
 
   bpfFloat vFloatValue = static_cast<bpfFloat>(vJFloatValue);
+
+  aEnv->DeleteLocalRef(vFloatClass);
+  bpfJNISanityCheck();
+  aEnv->DeleteLocalRef(vLengthValue);
+  bpfJNISanityCheck();
+
+
   return vFloatValue;
 }
 
@@ -1034,14 +1097,7 @@ std::vector<bpfFloat> bpfFileReaderBioformats::GetPixelScales(JNIEnv* aEnv)
 {
   bpfFloat vScaleX = GetPixelsPhysicalSize("getPixelsPhysicalSizeX", aEnv);
   bpfFloat vScaleY = GetPixelsPhysicalSize("getPixelsPhysicalSizeY", aEnv);
-  bpfFloat vScaleZ;
-
-  if (GetDataSize(Z) > 1) {
-    vScaleZ = GetPixelsPhysicalSize("getPixelsPhysicalSizeZ", aEnv);
-  }
-  else {
-    vScaleZ = (vScaleX + vScaleY) / 2.0f;
-  }
+  bpfFloat vScaleZ = GetPixelsPhysicalSize("getPixelsPhysicalSizeZ", aEnv);
 
   std::vector<bpfFloat> vScales = { vScaleX , vScaleY, vScaleZ };
   return vScales;
@@ -1060,14 +1116,18 @@ bpfFloat bpfFileReaderBioformats::GetPixelsPhysicalSize(const bpfString& aMethod
     bpfJNISanityCheck(vPixelsPhysicalSize, "vPixelsPhysicalSize");
   }
   catch (...) {
+    aEnv->DeleteLocalRef(vPixelsPhysicalSize);
+    bpfJNISanityCheck();
     UnlockMetadataObject(aEnv);
-    return 1;
+    return 0;
   }
 
   bpfFloat vScale = GetFloatFromLength(vPixelsPhysicalSize, aEnv);
 
+  aEnv->DeleteLocalRef(vPixelsPhysicalSize);
+  bpfJNISanityCheck();
   UnlockMetadataObject(aEnv);
-  return vScale != 0 ? vScale : 1;
+  return vScale;
 }
 
 
@@ -1081,9 +1141,13 @@ bpfString bpfFileReaderBioformats::GetPixelsPhysicalSizeString(const bpfString& 
 
   if (vPixelsPhysicalSize) {
     bpfFloat vScale = GetFloatFromLength(vPixelsPhysicalSize, aEnv);
+    aEnv->DeleteLocalRef(vPixelsPhysicalSize);
+    bpfJNISanityCheck();
     return bpfToString(vScale);
   }
   else {
+    aEnv->DeleteLocalRef(vPixelsPhysicalSize);
+    bpfJNISanityCheck();
     return "";
   }
 }
@@ -1125,6 +1189,11 @@ bpfString bpfFileReaderBioformats::GetPixelTypeString(JNIEnv* aEnv)
   bpfJNISanityCheck(vPixelTypeString, "vPixelTypeString");
 
   bpfString vPixelType = ConvertString(vPixelTypeString, aEnv);
+
+  aEnv->DeleteLocalRef(vPixelTypeString);
+  bpfJNISanityCheck();
+  aEnv->DeleteLocalRef(vFormatTools);
+  bpfJNISanityCheck();
   return vPixelType;
 }
 
@@ -1144,8 +1213,13 @@ bpfFileReaderBioformats::tOptionalColor bpfFileReaderBioformats::GetChannelColor
 
     if (vJChannelColor) {
       bpfColor vChannelColor = ConvertColor(vJChannelColor, aEnv);
+      aEnv->DeleteLocalRef(vJChannelColor);
+      bpfJNISanityCheck();
       return bpfMakeUniquePtr<bpfColor>(vChannelColor);
     }
+
+    aEnv->DeleteLocalRef(vJChannelColor);
+    bpfJNISanityCheck();
   }
 
   return tOptionalColor();
@@ -1177,6 +1251,9 @@ bpfColor bpfFileReaderBioformats::ConvertColor(jobject aJColor, JNIEnv* aEnv)
   bpfJNISanityCheck();
 
   bpfColor vColor(vJRed / 255.0f, vJGreen / 255.0f, vJBlue / 255.0f);
+
+  aEnv->DeleteLocalRef(vColorClass);
+  bpfJNISanityCheck();
   return vColor;
 }
 
@@ -1227,9 +1304,18 @@ std::vector<bpfColor> bpfFileReaderBioformats::GetColorTable8Bit(JNIEnv* aEnv)
       bpfJNISanityCheck();
       aEnv->ReleaseByteArrayElements(vByteArrayBlue, vByteElementsBlue, 0);
       bpfJNISanityCheck();
+
+      aEnv->DeleteLocalRef(vByteArrayBlue);
+      bpfJNISanityCheck();
+      aEnv->DeleteLocalRef(vByteArrayGreen);
+      bpfJNISanityCheck();
+      aEnv->DeleteLocalRef(vByteArrayRed);
+      bpfJNISanityCheck();
     }
   }
 
+  aEnv->DeleteLocalRef(vLookupTable);
+  bpfJNISanityCheck();
   return vTable;
 }
 
@@ -1284,9 +1370,18 @@ std::vector<bpfColor> bpfFileReaderBioformats::GetColorTable16Bit(JNIEnv* aEnv)
       bpfJNISanityCheck();
       aEnv->ReleaseShortArrayElements(vShortArrayBlue, vShortElementsBlue, 0);
       bpfJNISanityCheck();
+
+      aEnv->DeleteLocalRef(vShortArrayBlue);
+      bpfJNISanityCheck();
+      aEnv->DeleteLocalRef(vShortArrayGreen);
+      bpfJNISanityCheck();
+      aEnv->DeleteLocalRef(vShortArrayRed);
+      bpfJNISanityCheck();
     }
   }
 
+  aEnv->DeleteLocalRef(vLookupTable);
+  bpfJNISanityCheck();
   return vTable;
 }
 
@@ -1333,6 +1428,8 @@ void bpfFileReaderBioformats::MapCoreMetadata(bpfParameterSection* aParameterSec
 
   bpfString vDimensionOrder = ConvertString(vJDimensionOrder, aEnv);
   aParameterSection->SetParameter("DimensionOrder", vDimensionOrder);
+  aEnv->DeleteLocalRef(vJDimensionOrder);
+  bpfJNISanityCheck();
 
   // call ImageReader.isLittleEndian(), return boolean
   jmethodID vIsLittleEndian = aEnv->GetMethodID(mImageReaderClass, "isLittleEndian", "()Z");
@@ -1374,6 +1471,9 @@ void bpfFileReaderBioformats::MapOriginalMetadata(bpfParameterSection* aParamete
   bpfJNISanityCheck(vGlobalMetadata, "vGlobalMetadata");
 
   MapMetadataParameters(vGlobalMetadata, aParameterSection, aEnv);
+
+  aEnv->DeleteLocalRef(vGlobalMetadata);
+  bpfJNISanityCheck();
 }
 
 
@@ -1386,6 +1486,9 @@ void bpfFileReaderBioformats::MapSeriesMetadata(bpfParameterSection* aParameterS
   bpfJNISanityCheck(vSeriesMetadata, "vSeriesMetadata");
 
   MapMetadataParameters(vSeriesMetadata, aParameterSection, aEnv);
+
+  aEnv->DeleteLocalRef(vSeriesMetadata);
+  bpfJNISanityCheck();
 }
 
 
@@ -1443,7 +1546,25 @@ void bpfFileReaderBioformats::MapMetadataParameters(jobject aMetadata, bpfParame
     bpfString vValue = ConvertString(vMetadataValueString, aEnv);
 
     aParameterSection->SetParameter(vKey, vValue);
+
+    aEnv->DeleteLocalRef(vMetadataValueString);
+    bpfJNISanityCheck();
+    aEnv->DeleteLocalRef(vGlobalMetadataValue);
+    bpfJNISanityCheck();
+    aEnv->DeleteLocalRef(vGlobalMetadataKey);
+    bpfJNISanityCheck();
   }
+
+  aEnv->DeleteLocalRef(vGlobalMetadataKeyArray);
+  bpfJNISanityCheck();
+  aEnv->DeleteLocalRef(vObjectClass);
+  bpfJNISanityCheck();
+  aEnv->DeleteLocalRef(vJSet);
+  bpfJNISanityCheck();
+  aEnv->DeleteLocalRef(vGlobalMetadataKeySet);
+  bpfJNISanityCheck();
+  aEnv->DeleteLocalRef(vJHashtable);
+  bpfJNISanityCheck();
 }
 
 

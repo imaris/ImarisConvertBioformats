@@ -53,7 +53,10 @@ private:
   bpfString GetDefaultJVMPath();
   bpfString GetBioformatsVersion() const;
   void GetSupportedBioformatsFormats(std::vector<bpfString>&  aFormats, std::vector<std::vector<bpfString>>& aExtensions) const;
+  void SetSupportedBioformatsFormats();
+  void SetFileReaderImplVersion();
 
+  bpfString mVersion;
   std::list<bpfString> mFormats;
   std::map<bpfString, bpfString> mDescriptions;
   std::map<bpfString, std::vector<bpfString>> mExtensions;

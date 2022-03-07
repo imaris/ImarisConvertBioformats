@@ -258,6 +258,7 @@ bpString bpFileReaderImpl::GetReaderDescription() const
   return "unknown file reader";
 }
 
+
 bpSize bpFileReaderImpl::GetDimension(Dimension aDimension)
 {
   bpUInt32 vCount=0;
@@ -557,7 +558,6 @@ std::vector<bpSize> bpFileReaderImpl::TransformToXYZCT(const std::vector<bpSize>
   assert(aVector.size() == 5);
 
   std::vector<bpSize> vImarisVector(5);
-
 
   vImarisVector[0] = aVector[GetDimension(X)];
   vImarisVector[1] = aVector[GetDimension(Y)];

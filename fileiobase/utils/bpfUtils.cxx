@@ -270,12 +270,12 @@ bool bpfStartsWith(const bpfString & aString, const bpfString & aPrefix)
   return aString.compare(0, aPrefix.size(), aPrefix) == 0;
 }
 
-bool bpfEndsWith(const bpfString& aString, const bpfString& aPrefix)
+bool bpfEndsWith(const bpfString& aString, const bpfString& aPostfix)
 {
-  if (aString.size() < aPrefix.size()) {
+  if (aString.size() < aPostfix.size()) {
     return false;
   }
-  return aString.compare(aString.size() - aPrefix.size(), aPrefix.size(), aPrefix) == 0;
+  return aString.compare(aString.size() - aPostfix.size(), aPostfix.size(), aPostfix) == 0;
 }
 
 static bpfChar bpfToUpperCase(bpfChar aChar)
