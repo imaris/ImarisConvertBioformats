@@ -99,12 +99,12 @@ The installation folder is ```build/<build_type>```.
 cd ImarisConvertBioformats
 mkdir build
 cd build
-cmake .. -DFreeImage_LIBRARIES="<path_to_dynamic_FreeImage_library>" -DJAVA_HOME="<jdk_folder>" -DJRE_HOME="<jre_folder>" ..
+cmake .. -DFreeImage_LIBRARIES="<path_to_dynamic_FreeImage_library>" -DJAVA_HOME="<jdk_folder>" -DJRE_HOME="<jre_folder>" -DCMAKE_BUILD_TYPE="Release"
 make
 make install
 ```
 For a ```debug``` build, one has to set:
->-DCMAKE_BUILD_TYPE=Debug 
+>-DCMAKE_BUILD_TYPE="Debug" 
 
 If ```CMAKE_BUILD_TYPE``` is defined, the installation folder is ```build/{$CMAKE_BUILD_TYPE}```, otherwise just ```build```.
 On some MacOS systems, the build target architecture(s) should be set with
