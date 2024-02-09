@@ -24,6 +24,7 @@
 #include "fileiobase/application/bpfExceptionBase.h"
 #include "fileiobase/application/bpfFileReaderImplFactoryBase.h"
 
+#include <limits>
 
 static const bpString mImarisScene = "ImarisSceneFile";
 
