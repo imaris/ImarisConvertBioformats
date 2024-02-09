@@ -117,7 +117,7 @@ include_directories(${SUBDIR_LIBS}/fileiobioformats)
 
 #set(FreeImage_ROOT $(FreeImage_ROOT) CACHE PATH "Search path for the FreeImage libraries")
 find_library(FreeImage_LIBRARIES 
-                 NAMES FreeImage libfreeimage
+                 NAMES FreeImage freeimage
                  PATHS ${FreeImage_ROOT}/lib
                  NO_DEFAULT_PATH)
 
