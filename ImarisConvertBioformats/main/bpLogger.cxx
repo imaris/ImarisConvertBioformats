@@ -17,6 +17,7 @@
  ***************************************************************************/
 
 
+
 #include "bpLogger.h"
 
 #include "../src/bpWriterCommonHeaders.h"
@@ -40,6 +41,11 @@
 #elif defined(__linux__)
 #include <unistd.h>
 #include <sys/types.h>
+#endif
+
+#if __GLIBC__ == 2 && __GLIBC_MINOR__ < 30
+#include <sys/syscall.h>
+#define gettid() syscall(SYS_gettid)
 #endif
 
 
